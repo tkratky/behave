@@ -2,6 +2,7 @@
 """
 This module provides multiprocessing Runner class.
 """
+import signal
 
 import six
 import os
@@ -55,6 +56,14 @@ class MultiProcRunner(Runner):
         self.config.outputs = []
         old_reporters = self.config.reporters
         self.config.reporters = []
+
+        def child_exited(sig, frame):
+            pid, exitcode = os.wait()
+            print("Child process {pid} exited with code {exitcode}".format(
+                pid=pid, exitcode=exitcode
+            ))
+
+        signal.signal(signal.SIGCHLD, child_exited)
 
         for i in range(proc_count):
             client = MultiProcClientRunner(self, i)
